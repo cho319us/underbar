@@ -10,25 +10,6 @@
     return val;
   };
 
-  /**
-   * COLLECTIONS
-   * ===========
-   *
-   * In this section, we'll have a look at functions that operate on collections
-   * of values; in JavaScript, a 'collection' is something that can contain a
-   * number of values--either an array or an object.
-   *
-   *
-   * IMPORTANT NOTE!
-   * ===========
-   *
-   * The .first function is implemented for you, to help guide you toward success
-   * in your work on the following functions. Whenever you see a portion of the
-   * assignment pre-completed, be sure to read and understand it fully before
-   * you proceed. Skipping this step will lead to considerably more difficulty
-   * implementing the sections you are responsible for.
-   */
-
   // Return an array of the first n elements of an array. If n is undefined,
   // return just the first element.
   _.first = function(array, n) {
@@ -57,13 +38,13 @@
     if(Array.isArray(collection)){
       //iterate the collection (array)
       for(var i=0; i<collection.length; i++){
-        // Call iterator(value, key, collection) for each element of collection (array).
+        // Call iterator(value, key, collection) for current element of collection (array).
         iterator(collection[i], i, collection);
       }
     }else{ // else collection is an object
       //iterate the collection (object)
       for(var key in collection){
-        // Call iterator(value, key, collection) for each element of collection (object).
+        // Call iterator(value, key, collection) for current element of collection (object).
         iterator(collection[key], key, collection);
       }
     }
@@ -78,6 +59,8 @@
     var result = -1;
 
     _.each(array, function(item, index) {
+      // if the current item is matching to the target value
+      // and the current item is the first match in the array (so the result === -1)
       if (item === target && result === -1) {
         result = index;
       }
@@ -108,6 +91,7 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
+
   };
 
 
@@ -116,6 +100,11 @@
     // map() is a useful primitive iteration function that works a lot
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
+    var resultArr = [];
+    _.each(collection, function(element) {
+      resultArr.push(iterator(element));
+    });
+    return resultArr;
   };
 
   /*
@@ -157,6 +146,17 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
+    // if accumulator is undefined
+    if(accumulator === undefined){
+      // then set accumulator to be equal to the first element of the collection
+      accumulator = collection[0];
+      // iteration to start with the second element
+      collection = collection.slice(1);
+    }
+    _.each(collection, function(element) {
+      accumulator = iterator(accumulator, element)
+    });
+    return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
