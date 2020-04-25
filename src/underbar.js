@@ -92,10 +92,14 @@
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
     var uniqArr = [];
+    var booleanArr = [];
     if(isSorted){
       //should handle iterators that work with a sorted array
       _.each(array, function(element) {
-
+        if(_.indexOf(booleanArr, iterator(element)) === -1){
+          booleanArr.push(iterator(element));
+          uniqArr.push(element);
+        }
       });
     }else{
       //should return all unique values contained in an unsorted array
