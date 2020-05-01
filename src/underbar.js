@@ -23,7 +23,7 @@
       return array[array.length-1];
     }else if(n <= array.length){
       return array.slice(array.length-n, array.length);
-    }else{
+    }else{ // n > array.length
       return array;
     }
   };
@@ -34,14 +34,15 @@
   // Note: _.each does not have a return value, but rather simply runs the
   // iterator function over each item in the input collection.
   _.each = function(collection, iterator) {
-    // if collection is array
+    // if collection is an array
     if(Array.isArray(collection)){
       //iterate the collection (array)
       for(var i=0; i<collection.length; i++){
         // Call iterator(value, key, collection) for current element of collection (array).
         iterator(collection[i], i, collection);
       }
-    }else{ // else collection is an object
+    // else collection is an object
+    }else{
       //iterate the collection (object)
       for(var key in collection){
         // Call iterator(value, key, collection) for current element of collection (object).
@@ -66,13 +67,14 @@
       }
     });
 
-    return result;
+    return result; //return -1 if the conditional statement is not true
   };
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
     var filterArr = [];
     _.each(collection, function(element) {
+      // push the element if the return value of test result of the element is true
       if (test(element)) {
         filterArr.push(element);
       }
@@ -85,27 +87,34 @@
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
     return _.filter(collection, function(element){
+      // this function is the same "test" function that passed to _filter(),
+      // but this time return the opposite test result in each element of the collection
       return !test(element);
     });
   };
 
   // Produce a duplicate-free version of the array.
+  // iterator = function(value) { return value === 1; };
   _.uniq = function(array, isSorted, iterator) {
     var uniqArr = [];
     var booleanArr = [];
+    // should handle iterators that work with a sorted array
+    // For example, [1, 2, 2, 3, 4, 4] -> [1, 2]
     if(isSorted){
-      //should handle iterators that work with a sorted array
       _.each(array, function(element) {
-        if(_.indexOf(booleanArr, iterator(element)) === -1){
-          booleanArr.push(iterator(element));
-          uniqArr.push(element);
+        // if the element in the array (target) returned by iterator function is not in booleanArr
+        if(_.indexOf(booleanArr, iterator(element)) === -1){ // true, false, false, false, false, false // -1, -1, 0, 0, 0, 0
+          booleanArr.push(iterator(element)); // true, false
+          uniqArr.push(element); // 1, 2
         }
       });
+    // should return all unique values contained in an unsorted array
+    // For example, [1, 2, 1, 3, 1, 4] -> [1, 2, 3, 4]
     }else{
-      //should return all unique values contained in an unsorted array
       _.each(array, function(element) {
-        if(_.indexOf(uniqArr, element) === -1){
-          uniqArr.push(element);
+        // if the element in the array (target) is not in uniqArr
+        if(_.indexOf(uniqArr, element) === -1){ // -1, -1, 0, -1, 0, -1
+          uniqArr.push(element); // 1, 2, 3, 4
         }
       });
     }
@@ -120,6 +129,7 @@
     // the members, it also maintains an array of results.
     var resultArr = [];
     _.each(collection, function(element) {
+      // push the element returned by iterator function
       resultArr.push(iterator(element));
     });
     return resultArr;
@@ -171,8 +181,10 @@
       // iteration to start with the second element
       collection = collection.slice(1);
     }
+    // iterate over the collection and excute iterator() in each element of the collection
     _.each(collection, function(element) {
-      accumulator = iterator(accumulator, element)
+      // returned value of the iterator function assigned to the accumulator
+      accumulator = iterator(accumulator, element);
     });
     return accumulator;
   };
@@ -191,14 +203,53 @@
 
 
   // Determine whether all of the elements match a truth test.
+  // iterator return true if even or false if not even
+  // TIP: Try re-using reduce() here.
   _.every = function(collection, iterator) {
-    // TIP: Try re-using reduce() here.
+    // passes by default for an empty collection
+    if(collection.length === 0){
+      return true;
+    }
+    // should work when no callback is provided
+    // ex. [true, true, false] -> false
+    if (iterator === undefined) {
+      iterator = _.identity;
+    }
+
+    var passNum = 0;
+    return _.reduce(collection, function(allPass, element) {
+      // if the element match a truth test, passNum add one
+      if(iterator(element)){
+        passNum++;
+      }
+      // return true if all the elements are passed, else return false
+      return passNum === collection.length;
+    }, false);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
+  // TIP: There's a very clever way to re-use every() here.
   _.some = function(collection, iterator) {
-    // TIP: There's a very clever way to re-use every() here.
+    // fail by default for an empty collection
+    if(collection.length === 0){
+      return false;
+    }
+    // should work when no callback is provided
+    // ex. [true, true, false] -> true
+    if (iterator === undefined) {
+      iterator = _.identity;
+    }
+
+    var passNum = 0;
+    return _.reduce(collection, function(onePass, element) {
+      // if the element match a truth test, passNum add one
+      if(iterator(element)){
+        passNum++;
+      }
+      // return true if there is one element is passed, else return false
+      return passNum >= 1;
+    }, false);
   };
 
 
@@ -221,11 +272,35 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    // As the arguments object is not an real Array, arguments.slice(1) will not work
+    // Converted to a real Array and slice
+    var slicedArgs = Array.prototype.slice.call(arguments, 1);
+    // iterate over the objects in the argument array which start from index 1
+    _.each(slicedArgs, function(element){
+      // iterate over the properties in the current object
+      _.each(element, function(value, key){
+        obj[key] = value;
+      });
+    });
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    // As the arguments object is not an real Array, arguments.slice(1) will not work
+    // Converted to a real Array and slice
+    var slicedArgs = Array.prototype.slice.call(arguments, 1);
+    // iterate over the objects in the argument array which start from index 1
+    _.each(slicedArgs, function(element){
+      // iterate over the properties in the current object
+      _.each(element, function(value, key){
+        if(obj[key] === undefined){
+          obj[key] = value;
+        }
+      });
+    });
+    return obj;
   };
 
 
@@ -269,6 +344,16 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var memory = {};
+    return function(){
+      var key = JSON.stringify(arguments);
+      // if it has not computed the result for the given argument yet
+      if(!memory[key]){
+        memory[key] = func.apply(this, arguments);
+      }
+      // return the value if it has already computed the result for the given argument
+      return memory[key];
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -278,6 +363,12 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    // As the arguments object is not an real Array, arguments.slice(2) will not work
+    // Converted to a real Array and start from index 3
+    var slicedArgs = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function(){
+      return func.apply(null, slicedArgs);
+    }, wait);
   };
 
 
@@ -292,6 +383,19 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var randomArr = [];
+    // get a copied array
+    var copyArr = array.slice();
+    // iterate over the input array
+    _.each(array, function(){
+      // Getting a random index number // copyArr.length(exclusive)
+      var randomIndexNum = Math.floor(Math.random() * Math.floor(copyArr.length));
+      // push the element of the random index number from copyArr
+      randomArr.push(copyArr[randomIndexNum]);
+      // remove the pushed element in the copyArr
+      copyArr.splice(randomIndexNum, 1);
+    });
+    return randomArr;
   };
 
 
